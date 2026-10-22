@@ -227,17 +227,17 @@ async function fetchRecent(){
   }
 }
 async function createPlaylist(name){
-  const body = { name, public:false, description:"Shufflerd copy made by Spotify Shuffler." };
+  const body = { name, public:false, description:"Shuffler copy made by Spotify Shuffler." };
   try { return await api("POST", "/me/playlists", body); }
   catch(e) { if (MOVED.includes(e.status)) return await api("POST", `/users/${state.me.id}/playlists`, body); throw e; }
 }
 async function writePlaylist(src, ordered){
-  const name = src.name + " (Shufflerd)";
+  const name = src.name + " (Shuffler)";
   let target = state.playlists.find(p => p.name === name && p.owner && p.owner.id === state.me.id);
   const uris = ordered.map(t => t.uri), chunks = [];
   for (let i = 0; i < uris.length; i += 100) chunks.push(uris.slice(i, i + 100));
   if (target) {
-    await listApi("PUT", target.id, "", { uris:chunks[0] });          // replaces the old Shufflerd order
+    await listApi("PUT", target.id, "", { uris:chunks[0] });          // replaces the old Shuffler order
   } else {
     const c = await createPlaylist(name);
     target = { id:c.id, name:c.name || name, owner:{ id:state.me.id } };
@@ -337,7 +337,7 @@ function renderSetup(){ // only used if CLIENT_ID above is left empty
 function renderConnect(){
   app.innerHTML = `
     <header class="top"><h1>Spotify Shuffler</h1></header>
-    <p class="lede">Sign in to Spotify so the app can read your playlists and save Shufflerd copies.</p>
+    <p class="lede">Sign in to Spotify so the app can read your playlists and save Shuffler copies.</p>
     ${msgHtml()}
     <button class="primary" id="connect">Connect Spotify</button>
     <p class="hint">If Spotify blocks you after signing in, the person who shared this page needs to add your Spotify account's email to their app's user list first.</p>
@@ -412,7 +412,7 @@ async function renderMain(){
 }
 function visiblePlaylists(){
   const q = state.query.trim().toLowerCase();
-  return state.playlists.filter(p => !p.name.endsWith(" (Shufflerd)")
+  return state.playlists.filter(p => !p.name.endsWith(" (Shuffler)")
     && (state.includeFollowed || (p.owner && state.me && p.owner.id === state.me.id))
     && (!q || p.name.toLowerCase().includes(q)));
 }
@@ -480,7 +480,7 @@ async function doShuffler(){
     const plainSample = fisher(tracks);
     let b1 = 0, b2 = 0;
     for (let i = 0; i < 20; i++) { const s = fisher(tracks); b1 += clumps(s, byArtist); b2 += clumps(s, byAlbum); }
-    setBusy("Saving the Shufflerd playlist…");
+    setBusy("Saving the Shuffler playlist…");
     const target = await writePlaylist(src, order);
     state.last = { id:target.id, name:target.name, order, plainSample, skipped, colors:colorMap(tracks),
       base:Math.round(b1 / 20), baseAlbum:Math.round(b2 / 20),
