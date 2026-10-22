@@ -227,17 +227,17 @@ async function fetchRecent(){
   }
 }
 async function createPlaylist(name){
-  const body = { name, public:false, description:"Shuffled copy made by Better Shuffle." };
+  const body = { name, public:false, description:"Shufflerd copy made by Spotify Shuffler." };
   try { return await api("POST", "/me/playlists", body); }
   catch(e) { if (MOVED.includes(e.status)) return await api("POST", `/users/${state.me.id}/playlists`, body); throw e; }
 }
 async function writePlaylist(src, ordered){
-  const name = src.name + " (Shuffled)";
+  const name = src.name + " (Shufflerd)";
   let target = state.playlists.find(p => p.name === name && p.owner && p.owner.id === state.me.id);
   const uris = ordered.map(t => t.uri), chunks = [];
   for (let i = 0; i < uris.length; i += 100) chunks.push(uris.slice(i, i + 100));
   if (target) {
-    await listApi("PUT", target.id, "", { uris:chunks[0] });          // replaces the old shuffled order
+    await listApi("PUT", target.id, "", { uris:chunks[0] });          // replaces the old Shufflerd order
   } else {
     const c = await createPlaylist(name);
     target = { id:c.id, name:c.name || name, owner:{ id:state.me.id } };
@@ -252,7 +252,7 @@ async function writePlaylist(src, ordered){
 const byArtist = t => t.artist, byAlbum = t => t.album;
 function fisher(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 // Each artist's tracks are spaced evenly through the list; jitter controls how strictly.
-function spreadShuffle(tracks, jitter){
+function spreadShuffler(tracks, jitter){
   const n = tracks.length, groups = new Map(), placed = [];
   for (const t of tracks) { if (!groups.has(t.artist)) groups.set(t.artist, []); groups.get(t.artist).push(t); }
   for (const g of groups.values()) {
@@ -316,7 +316,7 @@ function render(){
 }
 function renderSetup(){ // only used if CLIENT_ID above is left empty
   app.innerHTML = `
-    <header class="top"><h1>Better Shuffle</h1></header>
+    <header class="top"><h1>Spotify Shuffler</h1></header>
     <p class="lede">Connect your own Spotify app once. It takes about five minutes.</p>
     ${msgHtml()}
     <ol class="steps">
@@ -336,8 +336,8 @@ function renderSetup(){ // only used if CLIENT_ID above is left empty
 }
 function renderConnect(){
   app.innerHTML = `
-    <header class="top"><h1>Better Shuffle</h1></header>
-    <p class="lede">Sign in to Spotify so the app can read your playlists and save shuffled copies.</p>
+    <header class="top"><h1>Spotify Shuffler</h1></header>
+    <p class="lede">Sign in to Spotify so the app can read your playlists and save Shufflerd copies.</p>
     ${msgHtml()}
     <button class="primary" id="connect">Connect Spotify</button>
     <p class="hint">If Spotify blocks you after signing in, the person who shared this page needs to add your Spotify account's email to their app's user list first.</p>
@@ -347,11 +347,11 @@ function renderConnect(){
   if (chg) chg.onclick = () => { store.del("client_id"); render(); };
 }
 function renderConnectError(){
-  app.innerHTML = `<header class="top"><h1>Better Shuffle</h1></header>${msgHtml()}<button class="primary" id="out2">Start over</button>`;
+  app.innerHTML = `<header class="top"><h1>Spotify Shuffler</h1></header>${msgHtml()}<button class="primary" id="out2">Start over</button>`;
   document.getElementById("out2").onclick = logout;
 }
 async function renderMain(){
-  app.innerHTML = `<header class="top"><h1>Better Shuffle</h1><button class="ghost" id="out">Log out</button></header><p class="lede">Loading your playlists…</p>`;
+  app.innerHTML = `<header class="top"><h1>Spotify Shuffler</h1><button class="ghost" id="out">Log out</button></header><p class="lede">Loading your playlists…</p>`;
   document.getElementById("out").onclick = logout;
   if (!state.me) {
     try { await loadPlaylists(); }
@@ -367,9 +367,9 @@ async function renderMain(){
   if (!state.selected && last) state.selected = state.playlists.find(p => p.id === last) || null;
   const o = state.opts;
   app.innerHTML = `
-    <header class="top"><h1>Better Shuffle</h1><button class="ghost" id="out">Log out</button></header>
+    <header class="top"><h1>Spotify Shuffler</h1><button class="ghost" id="out">Log out</button></header>
     ${msgHtml()}
-    <details class="opts"><summary>Shuffle options</summary>
+    <details class="opts"><summary>Shuffler options</summary>
       <div class="opt"><label for="str">Spacing between songs by the same artist</label>
         <input type="range" id="str" min="1" max="5" step="1" value="${o.strength}" ${state.mode === "plain" ? "disabled" : ""}>
         <div class="rng"><span>Loose</span><span>Strict</span></div></div>
@@ -383,7 +383,7 @@ async function renderMain(){
     <div id="result"></div>
     <div class="dock"><div class="dock-in">
       <p id="status" role="status"></p>
-      <div class="seg" role="radiogroup" aria-label="Shuffle style">
+      <div class="seg" role="radiogroup" aria-label="Shuffler style">
         <button role="radio" data-mode="spread" aria-checked="${state.mode === "spread"}">Spread artists</button>
         <button role="radio" data-mode="plain" aria-checked="${state.mode === "plain"}">Plain random</button>
       </div>
@@ -412,7 +412,7 @@ async function renderMain(){
 }
 function visiblePlaylists(){
   const q = state.query.trim().toLowerCase();
-  return state.playlists.filter(p => !p.name.endsWith(" (Shuffled)")
+  return state.playlists.filter(p => !p.name.endsWith(" (Shufflerd)")
     && (state.includeFollowed || (p.owner && state.me && p.owner.id === state.me.id))
     && (!q || p.name.toLowerCase().includes(q)));
 }
@@ -423,17 +423,17 @@ function drawList(){
     return `<li><button class="row" data-id="${esc(p.id)}" aria-pressed="${!!state.selected && state.selected.id === p.id}"><b>${esc(p.name)}</b>${n != null ? `<span>${n} tracks</span>` : ""}</button></li>`;
   }).join("") : `<li class="empty">No playlists found. Try another search, or include playlists you follow.</li>`;
   const go = document.getElementById("go");
-  if (go) { go.disabled = !state.selected; go.textContent = state.selected ? `Shuffle “${state.selected.name}”` : "Pick a playlist to shuffle"; }
+  if (go) { go.disabled = !state.selected; go.textContent = state.selected ? `Shuffler “${state.selected.name}”` : "Pick a playlist to Shuffler"; }
 }
 function drawDock(){
   const box = document.getElementById("dockbtns"), r = state.last;
   if (r) {
     box.innerHTML = `<a class="primary" href="https://open.spotify.com/playlist/${esc(r.id)}" target="_blank" rel="noopener">Open in Spotify</a>
-      <button class="ghost again" id="again">Shuffle again</button>`;
-    document.getElementById("again").onclick = doShuffle;
+      <button class="ghost again" id="again">Shuffler again</button>`;
+    document.getElementById("again").onclick = doShuffler;
   } else {
     box.innerHTML = `<button class="primary" id="go"></button>`;
-    document.getElementById("go").onclick = doShuffle;
+    document.getElementById("go").onclick = doShuffler;
     drawList();
   }
 }
@@ -447,21 +447,21 @@ function drawResult(){
   box.innerHTML = `<section class="result">
     <h2>${esc(r.name)} is ready</h2>
     <p class="stat"><b>${r.after}</b> back-to-back repeats of the same artist
-      <small>A plain random shuffle of this playlist leaves about ${r.base}.</small></p>
+      <small>A plain random Shuffler of this playlist leaves about ${r.base}.</small></p>
     ${r.albums ? `<p class="stat"><b>${r.afterAlbum}</b> back-to-back repeats of the same album
-      <small>A plain random shuffle leaves about ${r.baseAlbum}.</small></p>` : ""}
+      <small>A plain random Shuffler leaves about ${r.baseAlbum}.</small></p>` : ""}
     <div class="strips">
       <label>Plain random (each colour is an artist)</label><canvas id="c1" aria-label="Plain random order"></canvas>
       <label>New order</label><canvas id="c2" aria-label="New order"></canvas>
     </div>
     ${r.heard ? `<p class="hint">${r.heard} recently played songs were moved to the end.</p>` : ""}
     ${r.skipped ? `<p class="hint">${r.skipped} local or podcast items were left out because Spotify can't copy them.</p>` : ""}
-    <p class="hint">Play it with Spotify's own shuffle turned off. Shuffling this playlist again replaces this copy with a fresh order.</p>
+    <p class="hint">Play it with Spotify's own Shuffler turned off. Shuffling this playlist again replaces this copy with a fresh order.</p>
   </section>`;
   drawStrip(document.getElementById("c1"), r.plainSample, r.colors);
   drawStrip(document.getElementById("c2"), r.order, r.colors);
 }
-async function doShuffle(){
+async function doShuffler(){
   const src = state.selected; if (!src) return;
   state.last = null; drawDock(); document.getElementById("result").innerHTML = "";
   const o = state.opts;
@@ -474,13 +474,13 @@ async function doShuffle(){
     const spread = state.mode === "spread";
     const keys = o.albums && spread ? [byArtist, byAlbum] : [byArtist];
     const jitter = JITTER[o.strength - 1], gap = MIN_GAP[o.strength - 1];
-    const arrange = list => spread ? repair(repair(spreadShuffle(list, jitter), gap, keys), 1, keys) : fisher(list);
+    const arrange = list => spread ? repair(repair(spreadShuffler(list, jitter), gap, keys), 1, keys) : fisher(list);
     const fresh = tracks.filter(t => !recent.has(t.uri)), heard = tracks.filter(t => recent.has(t.uri));
     const order = arrange(fresh).concat(arrange(heard));
     const plainSample = fisher(tracks);
     let b1 = 0, b2 = 0;
     for (let i = 0; i < 20; i++) { const s = fisher(tracks); b1 += clumps(s, byArtist); b2 += clumps(s, byAlbum); }
-    setBusy("Saving the shuffled playlist…");
+    setBusy("Saving the Shufflerd playlist…");
     const target = await writePlaylist(src, order);
     state.last = { id:target.id, name:target.name, order, plainSample, skipped, colors:colorMap(tracks),
       base:Math.round(b1 / 20), baseAlbum:Math.round(b2 / 20),
